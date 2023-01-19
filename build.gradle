@@ -2,6 +2,8 @@ plugins {
 	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'com.palantir.docker' version '0.34.0'
+	id 'com.palantir.docker-run' version '0.34.0'
 }
 
 group = 'com.manoj'
@@ -20,4 +22,20 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin:3.1.2'
 
 	implementation 'io.micrometer:micrometer-registry-prometheus:1.9.0'
+}
+
+String dockerHubUsernameProperty = findProperty('dockerHubUsername') ?: 'manojpannala'
+String imageName = "${dockerHubUsernameProperty}/tracing-demo:\$(date +%s)"
+
+docker {
+	name imageName
+	files "build/libs/${bootJar.archiveFileName.get()}"
+	buildArgs([JAR_FILE: bootJar.archiveFileName.get()])
+}
+
+dockerRun {
+	name project.name
+	image imageName
+	ports '8080:8080'
+	clean true
 }
